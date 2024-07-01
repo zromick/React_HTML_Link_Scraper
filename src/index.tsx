@@ -47,7 +47,7 @@ const HTMLLinkExtractor = () => {
     }
   };
 
-  const tip = 'Tip: To easily get the HTML of a webpage, right-click on the {<body>} tag in the browser\'s developer tools and select "Copy element".';
+  const tip = 'Tip: To easily get the HTML of a webpage, right-click on the {<body>} tag in the browser\'s developer tools and select "Copy -> Copy element".';
 
   return (
     <div className="w-full max-w-2xl mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
