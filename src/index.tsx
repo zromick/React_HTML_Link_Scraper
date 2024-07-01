@@ -1,13 +1,14 @@
-const { useState, useEffect } = React;
-const { InfoIcon, Copy, Check } = lucide;
+import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom/client';
+import { InfoIcon, Copy, Check } from 'lucide-react';
 
 const HTMLLinkExtractor = () => {
   const [html, setHtml] = useState('');
-  const [links, setLinks] = useState([]);
+  const [links, setLinks] = useState<string[]>([]);
   const [message, setMessage] = useState('');
   const [isCopied, setIsCopied] = useState(false);
 
-  const extractLinks = (html) => {
+  const extractLinks = (html: string) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const links = Array.from(doc.getElementsByTagName('a'))
@@ -34,7 +35,7 @@ const HTMLLinkExtractor = () => {
     }
 
     const linkText = links.join('\n');
-    
+
     try {
       await navigator.clipboard.writeText(linkText);
       setMessage('Links copied to clipboard!');
@@ -46,18 +47,20 @@ const HTMLLinkExtractor = () => {
     }
   };
 
+  const tip = 'Tip: To easily get the HTML of a webpage, right-click on the {<body>} tag in the browser\'s developer tools and select "Copy element".';
+
   return (
     <div className="w-full max-w-2xl mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
       <div className="mb-4 bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4" role="alert">
         <InfoIcon className="inline-block mr-2" />
-        <span>Tip: To easily get the HTML of a webpage, right-click on the {'<body>'} tag in the browser's developer tools and select "Copy element".</span>
+        <span>{tip}</span>
       </div>
       <textarea
         value={html}
         onChange={(e) => setHtml(e.target.value)}
         placeholder="Paste your HTML here..."
         className="w-full h-40 px-3 py-2 text-gray-700 border rounded-lg focus:outline-none"
-        rows="4"
+        rows={4}
       />
       <div className="flex justify-between items-center mt-4">
         <span className="text-sm text-gray-500">{message}</span>
@@ -95,4 +98,7 @@ const App = () => (
   </div>
 );
 
-ReactDOM.render(<App />, document.getElementById('root'));
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+root.render(
+  <App />
+);
