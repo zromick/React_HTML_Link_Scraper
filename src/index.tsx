@@ -9,7 +9,7 @@ const HTMLLinkScraper = () => {
   const [isCopied, setIsCopied] = useState(false);
   const [baseUrl, setBaseUrl] = useState<string>('');
   const [isSorted, setIsSorted] = useState(false);
-  const useFullUrls = true;
+  const useFullUrls = true; // Kinda unnecessary but could be useful if you want to toggle this
   const maxDisplayLength = 100;
 
   const extractMostCommonBaseUrl = (html: string): string => {
