@@ -61,7 +61,7 @@ const HTMLLinkScraper = () => {
     <div className="w-full max-w-2xl mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
       <div className="mb-4 bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4" role="alert">
         <InfoIcon className="inline-block mr-2" />
-        <span>{tip}</span>
+        <span style={{ whiteSpace: 'pre-wrap' }}>{tip}</span>
       </div>
       <textarea
         value={html}
