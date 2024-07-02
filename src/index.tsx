@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { InfoIcon, Copy, Check } from 'lucide-react';
 
-const HTMLLinkExtractor = () => {
+const HTMLLinkScraper = () => {
   const [html, setHtml] = useState('');
   const [links, setLinks] = useState<string[]>([]);
   const [message, setMessage] = useState('');
@@ -93,8 +93,8 @@ const HTMLLinkExtractor = () => {
 
 const App = () => (
   <div>
-    <h1 className="text-3xl font-bold text-center mb-8">HTML Link Extractor</h1>
-    <HTMLLinkExtractor />
+    <h1 className="text-3xl font-bold text-center mb-8">HTML Link Scraper</h1>
+    <HTMLLinkScraper />
   </div>
 );
 
