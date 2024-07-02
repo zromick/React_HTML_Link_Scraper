@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.js": "/React_HTML_Link_Scraper/static/js/main.f9ec7f6e.js",
+    "main.js": "/React_HTML_Link_Scraper/static/js/main.d3ce54ee.js",
     "index.html": "/React_HTML_Link_Scraper/index.html",
-    "main.f9ec7f6e.js.map": "/React_HTML_Link_Scraper/static/js/main.f9ec7f6e.js.map"
+    "main.d3ce54ee.js.map": "/React_HTML_Link_Scraper/static/js/main.d3ce54ee.js.map"
   },
   "entrypoints": [
-    "static/js/main.f9ec7f6e.js"
+    "static/js/main.d3ce54ee.js"
   ]
 }
