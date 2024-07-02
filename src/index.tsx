@@ -47,7 +47,12 @@ const HTMLLinkScraper = () => {
     }
   };
 
-  const tip = 'The purpose of this site is to easily scrape a webpage for links. To do so, right-click on a webpage and click "Inspect." Under the "Elements" tab, right-click on the {<body>} tag and select "Copy -> Copy element".';
+  const tip = `The purpose of this site is to easily scrape a webpage for links.\n\n
+    1. Right-click on a webpage and click "Inspect."\n
+    2. Under the "Elements" tab.\n
+    3. Right-click on the {<body>} tag.\n
+    4. select "Copy -> Copy element".\n
+    5. Paste the HTML in the text box below.`;
 
   return (
     <div className="w-full max-w-2xl mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
