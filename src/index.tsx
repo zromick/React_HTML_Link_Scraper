@@ -7,11 +7,12 @@ const HTMLLinkScraper: React.FC = () => {
   const [links, setLinks] = useState<string[]>([]);
   const [message, setMessage] = useState<string>('');
   const [isCopied, setIsCopied] = useState<boolean>(false);
-  const [baseUrl, setBaseUrl] = useState<string>('');
+  const [baseUrl, setBaseUrl] = useState<string>('https://');
   const [isSorted, setIsSorted] = useState<boolean>(false);
   const [topBaseUrls, setTopBaseUrls] = useState<string[]>([]);
-  const [isCustomUrl, setIsCustomUrl] = useState<boolean>(false);
+  const [isCustomUrl, setIsCustomUrl] = useState<boolean>(true);
   const maxDisplayLength = 100;
+  const maxTopUrls = 10;
 
   const extractTopBaseUrls = (html: string): string[] => {
     const urlRegex = /(https?:\/\/[^\s/$.?#].[^\s]*)/gi;
@@ -33,7 +34,7 @@ const HTMLLinkScraper: React.FC = () => {
 
     return Object.entries(urlCounts)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
+      .slice(0, maxTopUrls)
       .map(([url]) => url);
   };
 
@@ -43,16 +44,12 @@ const HTMLLinkScraper: React.FC = () => {
     const links = Array.from(doc.getElementsByTagName('a'))
       .map(a => {
         const href = a.getAttribute('href');
-        if (href && href.startsWith('http')) {
+        if (!href) return null;
+        try {
+          return new URL(href, baseUrl).href;
+        } catch {
           return href;
-        } else if (href && baseUrl) {
-          try {
-            return new URL(href, baseUrl).href;
-          } catch {
-            return href;
-          }
         }
-        return null;
       });
     return links.filter((link): link is string => link !== null);
   };
@@ -60,28 +57,27 @@ const HTMLLinkScraper: React.FC = () => {
   useEffect(() => {
     const extractedTopBaseUrls = extractTopBaseUrls(html);
     setTopBaseUrls(extractedTopBaseUrls);
-    if (extractedTopBaseUrls.length > 0 && !isCustomUrl && !baseUrl) {
-      setBaseUrl(extractedTopBaseUrls[0]);
-    }
-  }, [baseUrl, html, isCustomUrl]);
+  }, [html]);
 
   useEffect(() => {
-    const extractedLinks = extractLinks(html, baseUrl);
-    setLinks(extractedLinks);
-    if (extractedLinks.length === 0) {
-      setMessage(html.trim() ? 'No links were found in the provided HTML.' : '');
-    } else {
-      setMessage(`${extractedLinks.length} link${extractedLinks.length === 1 ? '' : 's'} extracted.`);
+    if (html && baseUrl) {
+      const extractedLinks = extractLinks(html, baseUrl);
+      setLinks(extractedLinks);
+      if (extractedLinks.length === 0) {
+        setMessage(html.trim() ? 'No links were found in the provided HTML.' : '');
+      } else {
+        setMessage(`${extractedLinks.length} link${extractedLinks.length === 1 ? '' : 's'} extracted.`);
+      }
+      setIsCopied(false);
+      setIsSorted(false);
     }
-    setIsCopied(false);
-    setIsSorted(false);
   }, [html, baseUrl]);
 
   const handleBaseUrlChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     if (value === 'custom') {
       setIsCustomUrl(true);
-      setBaseUrl('');
+      setBaseUrl('https://');
     } else {
       setIsCustomUrl(false);
       setBaseUrl(value);
@@ -125,14 +121,14 @@ const HTMLLinkScraper: React.FC = () => {
 
   Here's how to do it:
 
-  1. Right-click on a webpage and select "Inspect" (or "Inspect Element" depending on your browser).
-  2. Look for the "Elements" tab and navigate to it.
-  3. Right-click on the {<body>} tag in the Elements panel.
-  4. Choose "Copy" -> "Copy element".
-  5. Paste the copied HTML into the text box below.
-  6. Select a base URL from the dropdown or choose "Custom URL" to enter your own.
+  1. Enter the base URL for the webpage you're scraping in the "Custom URL" field.
+  2. Right-click on the webpage and select "Inspect" (or "Inspect Element" depending on your browser).
+  3. Look for the "Elements" tab and navigate to it.
+  4. Right-click on the {<body>} tag in the Elements panel.
+  5. Choose "Copy" -> "Copy element".
+  6. Paste the copied HTML into the text box below.
 
-  Note: The top 10 most common base URLs will be automatically extracted from the HTML.`;
+  Note: The top 10 most common base URLs will be automatically extracted from the HTML and added to the dropdown menu.`;
 
   return (
     <div className="w-full max-w-2xl mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
@@ -150,12 +146,12 @@ const HTMLLinkScraper: React.FC = () => {
           onChange={handleBaseUrlChange}
           className="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none mb-2"
         >
+          <option value="custom">Custom URL</option>
           {topBaseUrls.map((url, index) => (
             <option key={index} value={url}>
               {url}
             </option>
           ))}
-          <option value="custom">Custom URL</option>
         </select>
         {isCustomUrl && (
           <input
