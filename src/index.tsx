@@ -2,51 +2,42 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { InfoIcon, Copy, Check, SortAsc } from 'lucide-react';
 
-const HTMLLinkScraper = () => {
+const HTMLLinkScraper: React.FC = () => {
   const [html, setHtml] = useState<string>('');
   const [links, setLinks] = useState<string[]>([]);
-  const [message, setMessage] = useState('');
-  const [isCopied, setIsCopied] = useState(false);
+  const [message, setMessage] = useState<string>('');
+  const [isCopied, setIsCopied] = useState<boolean>(false);
   const [baseUrl, setBaseUrl] = useState<string>('');
-  const [isSorted, setIsSorted] = useState(false);
-  const useFullUrls = true; // Kinda unnecessary but could be useful if you want to toggle this
+  const [isSorted, setIsSorted] = useState<boolean>(false);
+  const [topBaseUrls, setTopBaseUrls] = useState<string[]>([]);
+  const [isCustomUrl, setIsCustomUrl] = useState<boolean>(false);
   const maxDisplayLength = 100;
 
-  const extractMostCommonBaseUrl = (html: string): string => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const anchors = Array.from(doc.getElementsByTagName('a'));
-    const hrefs = anchors.map(a => a.getAttribute('href')).filter(Boolean) as string[];
-    const fullUrls = hrefs.filter(href => href.startsWith('http'));
+  const extractTopBaseUrls = (html: string): string[] => {
+    const urlRegex = /(https?:\/\/[^\s/$.?#].[^\s]*)/gi;
+    const matches = html.match(urlRegex) || [];
 
-    if (fullUrls.length === 0) {
-      return '';
-    }
-
-    const baseUrls = fullUrls.map(url => {
+    const baseUrls = matches.map(url => {
       try {
         const parsedUrl = new URL(url);
         return `${parsedUrl.protocol}//${parsedUrl.hostname}`;
       } catch (error) {
         return null;
       }
-    }).filter(Boolean) as string[];
+    }).filter((url): url is string => url !== null);
 
-    if (baseUrls.length === 0) {
-      return '';
-    }
-
-    const urlCounts = baseUrls.reduce((acc, url) => {
+    const urlCounts = baseUrls.reduce<Record<string, number>>((acc, url) => {
       acc[url] = (acc[url] || 0) + 1;
       return acc;
-    }, {} as Record<string, number>);
+    }, {});
 
-    const mostCommonBaseUrl = Object.entries(urlCounts).reduce((a, b) => a[1] > b[1] ? a : b)[0];
-
-    return mostCommonBaseUrl || '';
+    return Object.entries(urlCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([url]) => url);
   };
 
-  const extractLinks = (html: string, baseUrl: string, useFullUrls: boolean) => {
+  const extractLinks = (html: string, baseUrl: string): string[] => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const links = Array.from(doc.getElementsByTagName('a'))
@@ -54,26 +45,28 @@ const HTMLLinkScraper = () => {
         const href = a.getAttribute('href');
         if (href && href.startsWith('http')) {
           return href;
-        } else if (href && useFullUrls && baseUrl) {
+        } else if (href && baseUrl) {
           try {
             return new URL(href, baseUrl).href;
           } catch {
             return href;
           }
-        } else if (href && href.startsWith('/')) {
-          return useFullUrls && baseUrl ? `${baseUrl}${href}` : `{base_url}${href}`;
-        } else if (href) {
-          return useFullUrls && baseUrl ? `${baseUrl}/${href}` : `{base_url}/${href}`;
         }
         return null;
       });
-    return [...new Set(links)].filter(Boolean) as string[];
+    return links.filter((link): link is string => link !== null);
   };
 
   useEffect(() => {
-    const extractedBaseUrl = extractMostCommonBaseUrl(html);
-    setBaseUrl(extractedBaseUrl);
-    const extractedLinks = extractLinks(html, extractedBaseUrl, useFullUrls);
+    const extractedTopBaseUrls = extractTopBaseUrls(html);
+    setTopBaseUrls(extractedTopBaseUrls);
+    if (extractedTopBaseUrls.length > 0 && !isCustomUrl && !baseUrl) {
+      setBaseUrl(extractedTopBaseUrls[0]);
+    }
+  }, [baseUrl, html, isCustomUrl]);
+
+  useEffect(() => {
+    const extractedLinks = extractLinks(html, baseUrl);
     setLinks(extractedLinks);
     if (extractedLinks.length === 0) {
       setMessage(html.trim() ? 'No links were found in the provided HTML.' : '');
@@ -82,7 +75,22 @@ const HTMLLinkScraper = () => {
     }
     setIsCopied(false);
     setIsSorted(false);
-  }, [html, useFullUrls]);
+  }, [html, baseUrl]);
+
+  const handleBaseUrlChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (value === 'custom') {
+      setIsCustomUrl(true);
+      setBaseUrl('');
+    } else {
+      setIsCustomUrl(false);
+      setBaseUrl(value);
+    }
+  };
+
+  const handleCustomBaseUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setBaseUrl(e.target.value);
+  };
 
   const handleCopyLinks = async () => {
     if (links.length === 0) {
@@ -108,9 +116,9 @@ const HTMLLinkScraper = () => {
     setIsSorted(true);
   };
 
-  const truncateDisplayText = (text: string, maxLength: number) => {
+  const truncateDisplayText = (text: string, maxLength: number): string => {
     if (text.length <= maxLength) return text;
-    return `${text.slice(0, maxLength - 3) }...`;
+    return `${text.slice(0, maxLength - 3)}...`;
   };
 
   const tip = `The purpose of this site is to easily scrape a webpage for links.
@@ -122,8 +130,9 @@ const HTMLLinkScraper = () => {
   3. Right-click on the {<body>} tag in the Elements panel.
   4. Choose "Copy" -> "Copy element".
   5. Paste the copied HTML into the text box below.
+  6. Select a base URL from the dropdown or choose "Custom URL" to enter your own.
 
-  Note: The base URL will be automatically extracted from the most common URL in the HTML.`;
+  Note: The top 10 most common base URLs will be automatically extracted from the HTML.`;
 
   return (
     <div className="w-full max-w-2xl mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
@@ -132,14 +141,31 @@ const HTMLLinkScraper = () => {
         <span style={{ whiteSpace: 'pre-wrap' }}>{tip}</span>
       </div>
       <div className="mb-4">
-        <input
-          type="text"
-          value={baseUrl}
-          onChange={(e) => setBaseUrl(e.target.value)}
-          placeholder="Base URL (automatically detected)"
-          className="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none"
-          readOnly
-        />
+        <label htmlFor="baseUrlSelect" className="block text-gray-700 text-sm font-bold mb-2">
+          Select Base URL:
+        </label>
+        <select
+          id="baseUrlSelect"
+          value={isCustomUrl ? 'custom' : baseUrl}
+          onChange={handleBaseUrlChange}
+          className="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none mb-2"
+        >
+          {topBaseUrls.map((url, index) => (
+            <option key={index} value={url}>
+              {url}
+            </option>
+          ))}
+          <option value="custom">Custom URL</option>
+        </select>
+        {isCustomUrl && (
+          <input
+            type="text"
+            value={baseUrl}
+            onChange={handleCustomBaseUrlChange}
+            placeholder="Enter custom base URL"
+            className="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none"
+          />
+        )}
       </div>
       <textarea
         value={html}
