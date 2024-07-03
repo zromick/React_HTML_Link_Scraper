@@ -2,22 +2,26 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { InfoIcon, Copy, Check, SortAsc } from 'lucide-react';
 
+// Main component for the HTML Link Scraper
 const HTMLLinkScraper: React.FC = () => {
-  const [html, setHtml] = useState<string>('');
-  const [links, setLinks] = useState<string[]>([]);
-  const [message, setMessage] = useState<string>('');
-  const [isCopied, setIsCopied] = useState<boolean>(false);
-  const [baseUrl, setBaseUrl] = useState<string>('https://');
-  const [isSorted, setIsSorted] = useState<boolean>(false);
-  const [topBaseUrls, setTopBaseUrls] = useState<string[]>([]);
-  const [isCustomUrl, setIsCustomUrl] = useState<boolean>(true);
-  const maxDisplayLength = 100;
-  const maxTopUrls = 10;
+  // State variables to manage component data and UI
+  const [html, setHtml] = useState<string>(''); // Stores the input HTML
+  const [links, setLinks] = useState<string[]>([]); // Stores extracted links
+  const [message, setMessage] = useState<string>(''); // Displays messages to the user
+  const [isCopied, setIsCopied] = useState<boolean>(false); // Tracks if links are copied
+  const [baseUrl, setBaseUrl] = useState<string>('https://'); // Base URL for relative links
+  const [isSorted, setIsSorted] = useState<boolean>(false); // Tracks if links are sorted
+  const [topBaseUrls, setTopBaseUrls] = useState<string[]>([]); // Stores most common base URLs
+  const [isCustomUrl, setIsCustomUrl] = useState<boolean>(true); // Tracks if custom URL is selected
+  const maxDisplayLength = 100; // Maximum length for displayed links
+  const maxTopUrls = 10; // Maximum number of top base URLs to show
 
+  // Function to extract the most common base URLs from the HTML
   const extractTopBaseUrls = (html: string): string[] => {
     const urlRegex = /(https?:\/\/[^\s/$.?#].[^\s]*)/gi;
     const matches = html.match(urlRegex) || [];
 
+    // Extract base URLs (protocol + hostname)
     const baseUrls = matches.map(url => {
       try {
         const parsedUrl = new URL(url);
@@ -27,17 +31,20 @@ const HTMLLinkScraper: React.FC = () => {
       }
     }).filter((url): url is string => url !== null);
 
+    // Count occurrences of each base URL
     const urlCounts = baseUrls.reduce<Record<string, number>>((acc, url) => {
       acc[url] = (acc[url] || 0) + 1;
       return acc;
     }, {});
 
+    // Sort by count and return top URLs
     return Object.entries(urlCounts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, maxTopUrls)
       .map(([url]) => url);
   };
 
+  // Function to extract links from HTML
   const extractLinks = (html: string, baseUrl: string): string[] => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
@@ -51,14 +58,17 @@ const HTMLLinkScraper: React.FC = () => {
           return href;
         }
       });
-    return links.filter((link): link is string => link !== null);
+    // Filter out null values and remove duplicates
+    return Array.from(new Set(links.filter((link): link is string => link !== null)));
   };
 
+  // Effect to update top base URLs when HTML changes
   useEffect(() => {
     const extractedTopBaseUrls = extractTopBaseUrls(html);
     setTopBaseUrls(extractedTopBaseUrls);
   }, [html]);
 
+  // Effect to extract links when HTML or base URL changes
   useEffect(() => {
     if (html && baseUrl) {
       const extractedLinks = extractLinks(html, baseUrl);
@@ -66,13 +76,14 @@ const HTMLLinkScraper: React.FC = () => {
       if (extractedLinks.length === 0) {
         setMessage(html.trim() ? 'No links were found in the provided HTML.' : '');
       } else {
-        setMessage(`${extractedLinks.length} link${extractedLinks.length === 1 ? '' : 's'} extracted.`);
+        setMessage(`${extractedLinks.length} unique link${extractedLinks.length === 1 ? '' : 's'} extracted.`);
       }
       setIsCopied(false);
       setIsSorted(false);
     }
   }, [html, baseUrl]);
 
+  // Handler for base URL selection change
   const handleBaseUrlChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     if (value === 'custom') {
@@ -84,10 +95,12 @@ const HTMLLinkScraper: React.FC = () => {
     }
   };
 
+  // Handler for custom base URL input change
   const handleCustomBaseUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBaseUrl(e.target.value);
   };
 
+  // Function to copy links to clipboard
   const handleCopyLinks = async () => {
     if (links.length === 0) {
       setMessage('No links to copy.');
@@ -106,17 +119,20 @@ const HTMLLinkScraper: React.FC = () => {
     }
   };
 
+  // Function to sort links alphabetically
   const handleSortLinks = () => {
     const sortedLinks = [...links].sort((a, b) => a.localeCompare(b));
     setLinks(sortedLinks);
     setIsSorted(true);
   };
 
+  // Function to truncate long texts for display
   const truncateDisplayText = (text: string, maxLength: number): string => {
     if (text.length <= maxLength) return text;
     return `${text.slice(0, maxLength - 3)}...`;
   };
 
+  // Tip text to guide users on how to use the app
   const tip = `The purpose of this site is to easily scrape a webpage for links.
 
   Here's how to do it:
@@ -130,12 +146,16 @@ const HTMLLinkScraper: React.FC = () => {
 
   Note: The top 10 most common base URLs will be automatically extracted from the HTML and added to the dropdown menu.`;
 
+  // Component JSX
   return (
     <div className="w-full max-w-2xl mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+      {/* Information box with usage tips */}
       <div className="mb-4 bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4" role="alert">
         <InfoIcon className="inline-block mr-2" />
         <span style={{ whiteSpace: 'pre-wrap' }}>{tip}</span>
       </div>
+
+      {/* Base URL selection dropdown and input */}
       <div className="mb-4">
         <label htmlFor="baseUrlSelect" className="block text-gray-700 text-sm font-bold mb-2">
           Select Base URL:
@@ -163,6 +183,8 @@ const HTMLLinkScraper: React.FC = () => {
           />
         )}
       </div>
+
+      {/* HTML input textarea */}
       <textarea
         value={html}
         onChange={(e) => setHtml(e.target.value)}
@@ -170,6 +192,8 @@ const HTMLLinkScraper: React.FC = () => {
         className="w-full h-40 px-3 py-2 text-gray-700 border rounded-lg focus:outline-none"
         rows={4}
       />
+
+      {/* Action buttons and message display */}
       <div className="flex justify-between items-center mt-4">
         <span className="text-sm text-gray-500">{message}</span>
         <div>
@@ -191,6 +215,8 @@ const HTMLLinkScraper: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Display extracted links */}
       {links.length > 0 && (
         <div className="mt-4">
           <h3 className="text-xl font-semibold mb-2">Extracted Links:</h3>
@@ -216,6 +242,7 @@ const HTMLLinkScraper: React.FC = () => {
   );
 };
 
+// Main App component
 const App = () => (
   <div>
     <h1 className="text-3xl font-bold text-center mb-8">HTML Link Scraper</h1>
@@ -223,6 +250,7 @@ const App = () => (
   </div>
 );
 
+// Render the App component to the DOM
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
   <App />
