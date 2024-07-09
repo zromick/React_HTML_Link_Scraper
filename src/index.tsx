@@ -238,6 +238,18 @@ const HTMLLinkScraper: React.FC = () => {
           </ul>
         </div>
       )}
+
+      {/* New Venmo button section */}
+      <div className="mt-8 text-center">
+        <a
+          href="https://venmo.com/u/zsrmck"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-block transition duration-300 ease-in-out transform hover:scale-105"
+        >
+          Like this app? Venmo me!
+        </a>
+      </div>
     </div>
   );
 };
