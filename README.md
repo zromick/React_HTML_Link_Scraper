@@ -5,7 +5,7 @@ Enabled by gh-pages (configured in package.json at this homepage): https://zromi
 
 To see all of my projects: https://zromick.github.io
 
-Also, check out this [gh-pages tutorial.](https://www.youtube.com/watch?v=Q9n2mLqXFpU)
+Also, check out this [gh-pages tutorial.](https://www.youtube.com/watch?v=Q9n2mLqXFpU&t=2m2s)
 
 ## Getting Started
 First, install the NPM libraries.
