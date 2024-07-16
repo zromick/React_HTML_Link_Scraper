@@ -1,12 +1,8 @@
 {
   "compilerOptions": {
     "baseUrl": "src",
-    "target": "es6",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "target": "ES2022",
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -14,21 +10,16 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    "paths": {
+      "@/*": ["*"]
+    }
   },
-  "include": [
-    "src",
-    "webpack.config.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ],
-  "types": [
-    "cypress"
-  ]
+  "include": ["src", "webpack.config.ts"],
+  "exclude": ["node_modules"],
 }
